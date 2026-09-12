@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package bandori;
+
+message AppGetResponse {
+  string clientVersion = 1;
+  string dataVersion = 2;
+  string appStatus = 3;
+  string clientStatus = 4;
+  string schema = 5;
+  string gacha = 7;
+  string multiLive = 8;
+  string starShop = 9;
+  string masterDataVersion = 10;
+  string photonAppId = 11;
+  repeated MonthlyRankingStatus monthlyRankingStatues = 12;
+}
+
+message MonthlyRankingStatus {
+  uint32 monthlyRankingId = 1;
+  string status = 2;
+}

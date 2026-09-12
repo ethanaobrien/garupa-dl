@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package bandori;
+
+message AssetBundleInfo {
+  string version = 1;
+  map<string, AssetBundleElement> bundles = 2;
+}
+
+message AssetBundleElement {
+  string bundleName = 1;
+  string hash = 2;
+  string version = 3;
+  string category = 4;
+  uint32 crc = 5;
+  repeated string dependencies = 6;
+  int64 fileSize = 7;
+}
