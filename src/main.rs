@@ -16,6 +16,7 @@ pub enum Platform {
     Ios,
 }
 
+// This allows us to cleanly print the platform enum to the console
 impl std::fmt::Display for Platform {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -53,6 +54,7 @@ struct Args {
     aes_iv: String,
 }
 
+// Helper function to get the argv
 fn get_args() -> Result<Args, ()> {
     let args = Args::parse();
     if args.version_hash.is_empty() {
@@ -66,9 +68,13 @@ fn get_args() -> Result<Args, ()> {
     Ok(args)
 }
 
+// Application entry point, starts here. Parses arguments, checks for an update, then downloads everything
 #[tokio::main]
 async fn main() -> Result<(), ()> {
     let args = get_args()?;
+
+     // Check for an update before doing anything else.
+    game::check_for_update(&args.api_url, &args.client_version, &args.aes_key, &args.aes_iv).await?;
 
     let (data_version, full_version_hash) = game::get_latest_version_info(
         &args.api_url,

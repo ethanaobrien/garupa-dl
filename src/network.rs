@@ -20,3 +20,9 @@ pub async fn download_bytes(headers: &HeaderMap, url: &str) -> Result<Vec<u8>, r
     let resp = reqwest::Client::new().get(url).headers(headers.clone()).send().await?;
     Ok(resp.bytes().await?.to_vec())
 }
+
+// Like download_bytes but issues a PUT with a request body
+pub async fn put_bytes(headers: &HeaderMap, url: &str, body: &[u8]) -> Result<Vec<u8>, reqwest::Error> {
+    let resp = reqwest::Client::new().put(url).body(body.to_vec()).headers(headers.clone()).send().await?;
+    Ok(resp.bytes().await?.to_vec())
+}

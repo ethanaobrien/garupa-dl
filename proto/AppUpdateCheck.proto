@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package bandori;
+
+message AppUpdateCheck {
+  string status = 2;
+}

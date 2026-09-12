@@ -1,15 +1,15 @@
 use std::fs;
 use std::path::Path;
 
-use crate::Bandori::{AppGetResponse, AssetBundleInfo};
+use crate::Bandori::{AppGetResponse, AssetBundleInfo, AppUpdateCheck};
 use crate::encryption::decrypt;
-use crate::network::{download_bytes, garupa_headers};
+use crate::network::{download_bytes, garupa_headers, put_bytes};
 use prost::Message;
 
 // Max attempts for failed/missing api errors
 const MAX_ATTEMPTS: usize = 3;
 
-// Gets the latest
+// Gets the current asset version from the game server with the game version supplied
 pub async fn get_latest_version_info(
     api_url: &str,
     aes_key: &str,
@@ -40,6 +40,45 @@ pub async fn get_latest_version_info(
     let full_version_hash = format!("{data_version}_{version_hash}");
 
     Ok((data_version, full_version_hash))
+}
+
+// Checks and notifies the user if the application version being downloaded is not the latest
+pub async fn check_for_update(
+    api_url: &str,
+    client_version: &str,
+    aes_key: &str,
+    aes_iv: &str,
+) -> Result<bool, ()> {
+    let url = format!("{api_url}/user/123/auth");
+    println!("Checking for application updates: {url}");
+
+    // The request body is a raw, unencrypted "15" — only the response is encrypted
+    let headers = garupa_headers("Android", client_version);
+    let ciphertext = put_bytes(&headers, &url, b"15").await.map_err(|e| {
+        println!("Update check error: {e}");
+        ()
+    })?;
+
+    if ciphertext.is_empty() {
+        println!("Update check response empty.");
+        return Ok(false);
+      }
+
+    let decrypted = decrypt(aes_key.as_bytes(), aes_iv.as_bytes(), &ciphertext).map_err(|e| {
+        println!("Decrypt error: {e}");
+        ()
+    })?;
+
+    let info = AppUpdateCheck::decode(decrypted.as_slice()).map_err(|e| {
+        println!("Could not parse update check response: {e}");
+        ()
+    })?;
+
+    let update_required = info.status == "application_update_required";
+    if update_required {
+        println!("NOTICE: Application update detected!");
+    }
+    Ok(update_required)
 }
 
 // Downloads assets for a single platform.
